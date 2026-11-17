@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0AF77EF2-34EB-4C8F-A902-219E4F7D93CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniplayerBarra", "src\MiniplayerBarra\MiniplayerBarra.csproj", "{B7718FE7-C7B5-4D00-8F3B-1102BD03D2BA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{647A246B-ABF8-4751-8745-E4741A3C3A0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniplayerBarra.Tests", "tests\MiniplayerBarra.Tests\MiniplayerBarra.Tests.csproj", "{6CD92A70-BE65-4313-A74D-959B01B92A78}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B7718FE7-C7B5-4D00-8F3B-1102BD03D2BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7718FE7-C7B5-4D00-8F3B-1102BD03D2BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7718FE7-C7B5-4D00-8F3B-1102BD03D2BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7718FE7-C7B5-4D00-8F3B-1102BD03D2BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CD92A70-BE65-4313-A74D-959B01B92A78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CD92A70-BE65-4313-A74D-959B01B92A78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CD92A70-BE65-4313-A74D-959B01B92A78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CD92A70-BE65-4313-A74D-959B01B92A78}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B7718FE7-C7B5-4D00-8F3B-1102BD03D2BA} = {0AF77EF2-34EB-4C8F-A902-219E4F7D93CA}
+		{6CD92A70-BE65-4313-A74D-959B01B92A78} = {647A246B-ABF8-4751-8745-E4741A3C3A0E}
+	EndGlobalSection
+EndGlobal
