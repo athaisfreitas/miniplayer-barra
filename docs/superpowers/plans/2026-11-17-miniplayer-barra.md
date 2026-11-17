@@ -91,7 +91,7 @@ Responde três dúvidas da spec antes de construir em cima delas. O código fica
 - Modify: `.gitignore` (acrescentar `.scratch/`)
 
 - [ ] **Step 1: Pausar tudo.** Abra 3 abas comuns do YouTube no Chrome, todas tocando, mais o YT Music tocando. Liste as sessões GSMTC. Anote quantas sessões `Chrome` aparecem. Depois rode o ciclo "pausar todas as sessões tocando, esperar 400 ms, listar de novo" até 10 vezes e anote se, no fim, **todas** as abas estão pausadas (ouvindo e olhando o Chrome).
-  - Se ficar alguma aba tocando: **pare e avise a usuária** antes da Task 4, como a spec manda (seção 6).
+  - Se ficar alguma aba tocando: **pare e avise a autora** antes da Task 4, como a spec manda (seção 6).
 - [ ] **Step 2: Som por processo.** Capture o áudio só da árvore de processos do Chrome. A raiz é o `chrome.exe` cujo processo pai não é `chrome.exe`. Use `includeProcessTree = true`. Primeiro pela API do NAudio, se a versão tiver captura por processo. Se não tiver, por P/Invoke de `ActivateAudioInterfaceAsync` com `AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK`. Imprima o pico a cada 100 ms com o YT Music tocando e depois pausado.
   - Anote qual caminho funcionou. Se nenhum funcionar, a Task 7 usa só a captura do som geral (`WasapiLoopbackCapture`), que é o plano B da spec.
 - [ ] **Step 3: Posições na barra.** Com UI Automation, a partir de `Shell_TrayWnd`, liste `AutomationId`, `Name` e `BoundingRectangle` dos filhos. Anote os IDs do botão Iniciar (esperado `StartButton`), do último ícone de app e do botão Widgets (esperado `WidgetsButton`). Faça isso com a barra centralizada, com os Widgets ligados (Configurações → Personalização → Barra de tarefas) e com a barra alinhada à esquerda. **Volte as configurações** para o estado original no fim: centralizada e Widgets desligados.
@@ -376,6 +376,6 @@ Comportamento:
 
 ### Task 11: Publicar no GitHub
 
-- [ ] **Step 1:** Mostre à usuária o resultado da varredura da Task 10 e **peça confirmação explícita** para criar o repositório público `athaisfreitas/miniplayer-barra`.
-- [ ] **Step 2:** Crie o repositório público vazio (sem README, licença ou .gitignore). O `gh` não está instalado: ou a usuária cria em github.com/new, ou se instala o GitHub CLI (`winget install GitHub.cli`) e ela faz `gh auth login` uma vez.
-- [ ] **Step 3:** `git remote add origin https://github.com/athaisfreitas/miniplayer-barra.git && git branch -M main && git push -u origin main`. Expected: push aceito. Abra a página do repositório e confira que o README aparece com a imagem e que a lista de colaboradores tem só a usuária.
+- [ ] **Step 1:** Mostre à autora o resultado da varredura da Task 10 e **peça confirmação explícita** para criar o repositório público `athaisfreitas/miniplayer-barra`.
+- [ ] **Step 2:** Crie o repositório público vazio (sem README, licença ou .gitignore). O `gh` não está instalado: ou a autora cria em github.com/new, ou se instala o GitHub CLI (`winget install GitHub.cli`) e ela faz `gh auth login` uma vez.
+- [ ] **Step 3:** `git remote add origin https://github.com/athaisfreitas/miniplayer-barra.git && git branch -M main && git push -u origin main`. Expected: push aceito. Abra a página do repositório e confira que o README aparece com a imagem e que a lista de colaboradores tem só a autora.
