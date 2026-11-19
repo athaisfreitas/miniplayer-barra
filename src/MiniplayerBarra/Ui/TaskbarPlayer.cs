@@ -421,10 +421,14 @@ internal sealed class TaskbarPlayer : IPlayerView
         private Point _hoverPoint;
         private bool _destroyed;
         private int _wheelAcc;
+        private readonly WheelHook _wheelHook;
 
         public EmbeddedForm(TaskbarPlayer owner)
         {
             _owner = owner;
+            _wheelHook = new WheelHook(
+                () => IsAlive && Native.GetWindowRect(Handle, out var r) ? r : null,
+                AddWheel);
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
@@ -468,6 +472,7 @@ internal sealed class TaskbarPlayer : IPlayerView
             base.OnMouseMove(e);
             // O Explorer pode pôr a barra na frente já no botão pressionado: guarda antes, ao passar o mouse.
             _focus.Hover();
+            _wheelHook.Install(); // a rodinha só chega pelo hook; sai no OnMouseLeave
             var text = _owner.TooltipAt(e.Location);
             if (text == _hoverText) return;
             _hoverText = text;
@@ -490,8 +495,13 @@ internal sealed class TaskbarPlayer : IPlayerView
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
-            // Touchpad manda deltas pequenos: acumula até um clique inteiro (120).
-            _wheelAcc += e.Delta;
+            AddWheel(e.Delta);
+        }
+
+        // Touchpad manda deltas pequenos: acumula até um clique inteiro (120).
+        private void AddWheel(int delta)
+        {
+            _wheelAcc += delta;
             int notches = _wheelAcc / 120;
             if (notches == 0) return;
             _wheelAcc -= notches * 120;
@@ -501,6 +511,7 @@ internal sealed class TaskbarPlayer : IPlayerView
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
+            _wheelHook.Uninstall();
             _wheelAcc = 0;
             _focus.Leave();
             ResetHover();
@@ -552,6 +563,7 @@ internal sealed class TaskbarPlayer : IPlayerView
         {
             if (disposing)
             {
+                _wheelHook.Dispose();
                 _hoverTimer.Dispose();
                 _focus.Dispose();
                 _toolTip.Dispose();
