@@ -24,6 +24,7 @@ internal sealed class AppController : IDisposable
     private readonly IFrameTimer _timer;
     private readonly Func<TimeSpan, Task> _delay;
     private readonly Action<MediaSnapshot> _openSource;
+    private readonly IAppVolume? _volume;
     private readonly Func<byte[]?, Color, (Bitmap? Image, Color WaveColor)> _decode;
 
     private int _generation;            // só a resposta do pedido mais recente é aplicada
@@ -41,7 +42,8 @@ internal sealed class AppController : IDisposable
         Func<IFrameTimer>? timerFactory = null,
         Func<TimeSpan, Task>? delay = null,
         Action<MediaSnapshot>? openSource = null,
-        Func<byte[]?, Color, (Bitmap? Image, Color WaveColor)>? decode = null)
+        Func<byte[]?, Color, (Bitmap? Image, Color WaveColor)>? decode = null,
+        IAppVolume? volume = null)
     {
         _sessions = sessions;
         _view = view;
@@ -53,6 +55,7 @@ internal sealed class AppController : IDisposable
         _delay = delay ?? (t => Task.Delay(t));
         _openSource = openSource ?? (m => SourceWindow.Activate(m));
         _decode = decode ?? CoverArt.Decode;
+        _volume = volume;
         _timer.Tick += OnFrame;
     }
 
@@ -67,6 +70,7 @@ internal sealed class AppController : IDisposable
             _sessions.Changed += OnChanged;
             _view.Clicked += OnClicked;
             _view.PauseAllRequested += OnPauseAllRequested;
+            _view.VolumeWheel += OnVolumeWheel;
         }
         return RefreshAsync();
     }
@@ -236,6 +240,27 @@ internal sealed class AppController : IDisposable
         _post(RequestRefresh);
     }
 
+    private void OnVolumeWheel(int notches)
+    {
+        var media = _shown;
+        if (_disposed || media is null || _volume is null || notches == 0) return;
+        try
+        {
+            var current = _volume.Get(media.Kind);
+            if (current is null)
+            {
+                Log.Info($"Volume: nenhuma sessão de áudio de {media.Kind}");
+                return;
+            }
+            var next = VolumeStep.Apply(current.Value, notches);
+            if (_volume.Set(media.Kind, next)) _view.ShowVolume(VolumeStep.Percent(next));
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Volume", ex);
+        }
+    }
+
     private void OnPauseAllRequested()
     {
         if (!_disposed) _ = PauseAllAsync();
@@ -264,6 +289,7 @@ internal sealed class AppController : IDisposable
             _sessions.Changed -= OnChanged;
             _view.Clicked -= OnClicked;
             _view.PauseAllRequested -= OnPauseAllRequested;
+            _view.VolumeWheel -= OnVolumeWheel;
         }
         _timer.Tick -= OnFrame;
         _timer.Dispose();

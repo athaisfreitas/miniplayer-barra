@@ -19,6 +19,7 @@ internal sealed class TaskbarPlayer : IPlayerView
 
     private readonly Listener _listener;
     private readonly System.Windows.Forms.Timer _check;
+    private readonly System.Windows.Forms.Timer _volumeTimer;
     private readonly Bitmap _measureBmp = new(1, 1);
     private EmbeddedForm? _form;
     private Theme _theme = Theme.Current();
@@ -30,11 +31,13 @@ internal sealed class TaskbarPlayer : IPlayerView
     private Rectangle _placed;     // posição atual na tela
     private bool _shown;
     private Surface? _surface;
+    private string? _volumeText;   // "Volume N%" no lugar do artista, por 1,5 s
     private bool _disposed;
 
     public event Action<PlayerHit>? Clicked;
     public event Action? PauseAllRequested;
     public event Action? ExitRequested;
+    public event Action<int>? VolumeWheel;
 
     private TaskbarPlayer()
     {
@@ -44,6 +47,15 @@ internal sealed class TaskbarPlayer : IPlayerView
         // largura dos ícones). Só roda com o player visível.
         _check = new System.Windows.Forms.Timer { Interval = CheckIntervalMs };
         _check.Tick += (_, _) => CheckTaskbar();
+        _volumeTimer = new System.Windows.Forms.Timer { Interval = 1500 };
+        _volumeTimer.Tick += (_, _) =>
+        {
+            _volumeTimer.Stop();
+            _volumeText = null;
+            if (_disposed) return;
+            Relayout();
+            Redraw();
+        };
     }
 
     /// <summary>Retorna null se não conseguir encaixar.</summary>
@@ -88,6 +100,16 @@ internal sealed class TaskbarPlayer : IPlayerView
         {
             Relayout();
         }
+        Redraw();
+    }
+
+    public void ShowVolume(int percent)
+    {
+        if (_disposed || _state is null) return;
+        _volumeText = $"Volume {percent}%";
+        _volumeTimer.Stop();
+        _volumeTimer.Start();
+        Relayout();
         Redraw();
     }
 
@@ -190,7 +212,7 @@ internal sealed class TaskbarPlayer : IPlayerView
         if (form is null || !form.IsAlive || state is null || info is null) return;
 
         string title = state.Media.Title ?? "";
-        string artist = state.Media.Artist ?? "";
+        string artist = _volumeText ?? state.Media.Artist ?? "";
         using var g = Graphics.FromImage(_measureBmp);
         var desired = PlayerLayout.Compute(g, title, artist, _scale, int.MaxValue / 2);
         int margin = (int)Math.Round(MarginPx * _scale);
@@ -241,7 +263,8 @@ internal sealed class TaskbarPlayer : IPlayerView
             // Alfa 1 em vez de 0: invisível, mas a janela continua recebendo o mouse.
             g.Clear(Color.FromArgb(1, 0, 0, 0));
             g.CompositingMode = CompositingMode.SourceOver;
-            PlayerRenderer.Draw(g, layout, state, _bands, _theme, _scale);
+            var drawn = _volumeText is null ? state : state with { Media = state.Media with { Artist = _volumeText } };
+            PlayerRenderer.Draw(g, layout, drawn, _bands, _theme, _scale);
             g.Flush(FlushIntention.Sync);
             _surface.Apply(form.Handle);
         }
@@ -263,8 +286,11 @@ internal sealed class TaskbarPlayer : IPlayerView
         if (_layout is null || _state is null || _layout.HitTest(p) != PlayerHit.OpenSource) return null;
         var m = _state.Media;
         if (string.IsNullOrEmpty(m.Title) && string.IsNullOrEmpty(m.Artist)) return null;
-        return string.IsNullOrEmpty(m.Artist) ? m.Title : string.IsNullOrEmpty(m.Title) ? m.Artist : $"{m.Title} — {m.Artist}";
+        var text = string.IsNullOrEmpty(m.Artist) ? m.Title : string.IsNullOrEmpty(m.Title) ? m.Artist : $"{m.Title} — {m.Artist}";
+        return text + "\nClique: abrir · Rodinha: volume";
     }
+
+    internal void OnWheel(int notches) => VolumeWheel?.Invoke(notches);
 
     internal void OnPauseAllClicked() => PauseAllRequested?.Invoke();
     internal void OnExitClicked() => ExitRequested?.Invoke();
@@ -275,6 +301,7 @@ internal sealed class TaskbarPlayer : IPlayerView
         _disposed = true;
         SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
         _check.Dispose();
+        _volumeTimer.Dispose();
         _form?.Dispose();
         _form = null;
         _surface?.Dispose();
@@ -393,6 +420,7 @@ internal sealed class TaskbarPlayer : IPlayerView
         private string? _hoverText;
         private Point _hoverPoint;
         private bool _destroyed;
+        private int _wheelAcc;
 
         public EmbeddedForm(TaskbarPlayer owner)
         {
@@ -459,9 +487,21 @@ internal sealed class TaskbarPlayer : IPlayerView
             _toolTip.Show(_hoverText, this, x, -(int)(28 * DeviceDpi / 96f), 5000);
         }
 
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+            // Touchpad manda deltas pequenos: acumula até um clique inteiro (120).
+            _wheelAcc += e.Delta;
+            int notches = _wheelAcc / 120;
+            if (notches == 0) return;
+            _wheelAcc -= notches * 120;
+            _owner.OnWheel(notches);
+        }
+
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
+            _wheelAcc = 0;
             _focus.Leave();
             ResetHover();
         }

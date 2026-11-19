@@ -18,4 +18,10 @@ internal interface IPlayerView : IDisposable
     event Action<PlayerHit>? Clicked;
     event Action? PauseAllRequested;
     event Action? ExitRequested;
+
+    /// <summary>Rodinha do mouse sobre o player, em cliques inteiros: positivo sobe, negativo desce.</summary>
+    event Action<int>? VolumeWheel;
+
+    /// <summary>Mostra "Volume N%" por um instante (no lugar do artista).</summary>
+    void ShowVolume(int percent);
 }

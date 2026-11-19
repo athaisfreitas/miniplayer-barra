@@ -8,6 +8,7 @@ internal sealed class FakePlayerView : IPlayerView
 {
     public List<PlayerState?> Shows { get; } = new();
     public List<float[]> Bands { get; } = new();
+    public List<int> Volumes { get; } = new();
 
     /// <summary>Executado dentro de Show (para conferir o estado no momento da chamada).</summary>
     public Action<PlayerState?>? OnShow { get; set; }
@@ -17,6 +18,7 @@ internal sealed class FakePlayerView : IPlayerView
     public event Action<PlayerHit>? Clicked;
     public event Action? PauseAllRequested;
     public event Action? ExitRequested;
+    public event Action<int>? VolumeWheel;
 
     public void Show(PlayerState? state)
     {
@@ -25,12 +27,22 @@ internal sealed class FakePlayerView : IPlayerView
     }
 
     public void SetBands(float[] bands) => Bands.Add(bands);
+    public void ShowVolume(int percent) => Volumes.Add(percent);
+    public void Wheel(int notches) => VolumeWheel?.Invoke(notches);
 
     public void Click(PlayerHit hit) => Clicked?.Invoke(hit);
     public void RequestPauseAll() => PauseAllRequested?.Invoke();
     public void RequestExit() => ExitRequested?.Invoke();
 
     public void Dispose() { }
+}
+
+internal sealed class FakeAppVolume : IAppVolume
+{
+    public float? Current { get; set; } = 0.5f;
+    public List<(SourceKind Kind, float Volume)> Sets { get; } = new();
+    public float? Get(SourceKind kind) => Current;
+    public bool Set(SourceKind kind, float volume) { Sets.Add((kind, volume)); Current = volume; return true; }
 }
 
 internal sealed class FakeWaveSource : IWaveSource

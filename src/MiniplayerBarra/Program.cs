@@ -137,7 +137,7 @@ internal static class Program
                 return;
             }
             _retry.Stop();
-            _controller = new AppController(_sessions, _view, _settings, () => Theme.Current().Accent, _meter);
+            _controller = new AppController(_sessions, _view, _settings, () => Theme.Current().Accent, _meter, volume: new AppVolume());
             Log.Info($"Iniciado (ondas {(_settings.Waves ? "ligadas" : "desligadas")})");
             _ = StartControllerAsync(_controller);
         }

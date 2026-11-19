@@ -18,6 +18,7 @@ public class AppControllerTests
         public FakePlayerView View { get; } = new();
         public FakeWaveSource Waves { get; } = new();
         public FakeFrameTimer Timer { get; } = new();
+        public FakeAppVolume Volume { get; } = new();
         public List<MediaSnapshot> Opened { get; } = new();
         public int Decodes { get; private set; }
         public AppController Controller { get; }
@@ -30,6 +31,7 @@ public class AppControllerTests
                 timerFactory: () => Timer,
                 delay: _ => Task.CompletedTask,
                 openSource: m => { lock (Opened) Opened.Add(m); },
+                volume: Volume,
                 decode: (bytes, accent) =>
                 {
                     Decodes++;
@@ -171,6 +173,38 @@ public class AppControllerTests
         r.View.Click(PlayerHit.OpenSource);
         Assert.True(SpinWait.SpinUntil(() => { lock (r.Opened) return r.Opened.Count == 1; }, 2000));
         lock (r.Opened) Assert.Equal("wa", r.Opened.Single().SessionId);
+    }
+
+    [Fact]
+    public async Task Wheel_up_raises_volume_of_shown_source_and_shows_it()
+    {
+        using var r = new Rig();
+        r.Sessions.Sessions.Add(S("c", SourceKind.ChromeTab, true));
+        await r.Controller.StartAsync();
+        r.View.Wheel(1);
+        Assert.Equal((SourceKind.ChromeTab, 0.55f), r.Volume.Sets.Single());
+        Assert.Equal(55, r.View.Volumes.Single());
+    }
+
+    [Fact]
+    public async Task Wheel_does_nothing_without_audio_session()
+    {
+        using var r = new Rig();
+        r.Sessions.Sessions.Add(S("c", SourceKind.ChromeTab, true));
+        await r.Controller.StartAsync();
+        r.Volume.Current = null;
+        r.View.Wheel(-1);
+        Assert.Empty(r.Volume.Sets);
+        Assert.Empty(r.View.Volumes);
+    }
+
+    [Fact]
+    public async Task Wheel_without_media_does_nothing()
+    {
+        using var r = new Rig();
+        await r.Controller.StartAsync();
+        r.View.Wheel(1);
+        Assert.Empty(r.Volume.Sets);
     }
 
     [Fact]
