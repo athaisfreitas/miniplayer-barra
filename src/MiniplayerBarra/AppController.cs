@@ -213,8 +213,12 @@ internal sealed class AppController : IDisposable
         }
         else if (hit == PlayerHit.OpenSource)
         {
-            try { _openSource(media); }
-            catch (Exception ex) { Log.Error("Abrir fonte", ex); }
+            // A busca da aba pela UI Automation leva centenas de ms: fora da thread da interface.
+            _ = Task.Run(() =>
+            {
+                try { _openSource(media); }
+                catch (Exception ex) { Log.Error("Abrir fonte", ex); }
+            });
         }
     }
 

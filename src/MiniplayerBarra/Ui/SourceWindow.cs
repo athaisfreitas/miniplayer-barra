@@ -5,7 +5,10 @@ using MiniplayerBarra.Core;
 
 namespace MiniplayerBarra.Ui;
 
-/// <summary>"Abrir fonte": traz para a frente a janela de nível superior visível da fonte da mídia.</summary>
+/// <summary>
+/// "Abrir fonte": traz para a frente a janela de nível superior visível da fonte da mídia.
+/// Se o título da janela não bater (aba em segundo plano), procura a aba pela UI Automation e a seleciona.
+/// </summary>
 internal static class SourceWindow
 {
     /// <summary>
@@ -27,7 +30,9 @@ internal static class SourceWindow
     public static bool Activate(MediaSnapshot media)
     {
         if (media.Kind == SourceKind.Other) return false;
-        var hwnd = Find(media);
+        var hwnd = Find(media); // rápido: a aba já é a ativa, ou é o app do YT Music, ou WhatsApp
+        if (hwnd == IntPtr.Zero && media.Kind is SourceKind.ChromeTab or SourceKind.YouTubeMusic)
+            hwnd = ChromeTabs.TrySelect(ChromeTabs.NeedleFor(media.Kind, media.Title ?? ""));
         if (hwnd == IntPtr.Zero)
         {
             Log.Info($"Abrir fonte: nenhuma janela de {media.Kind} encontrada");

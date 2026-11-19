@@ -29,7 +29,7 @@ public class AppControllerTests
                 post: a => a(),
                 timerFactory: () => Timer,
                 delay: _ => Task.CompletedTask,
-                openSource: m => Opened.Add(m),
+                openSource: m => { lock (Opened) Opened.Add(m); },
                 decode: (bytes, accent) =>
                 {
                     Decodes++;
@@ -169,7 +169,8 @@ public class AppControllerTests
         r.Sessions.Sessions.Add(S("wa", SourceKind.WhatsApp, true));
         await r.Controller.StartAsync();
         r.View.Click(PlayerHit.OpenSource);
-        Assert.Equal("wa", r.Opened.Single().SessionId);
+        Assert.True(SpinWait.SpinUntil(() => { lock (r.Opened) return r.Opened.Count == 1; }, 2000));
+        lock (r.Opened) Assert.Equal("wa", r.Opened.Single().SessionId);
     }
 
     [Fact]
