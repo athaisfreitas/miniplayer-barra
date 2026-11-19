@@ -47,7 +47,7 @@ public static class SourceProcess
     }
 
     /// <summary>"chrome" casa com chrome.exe; "WhatsApp" casa com WhatsApp.exe e WhatsApp.Root.exe (o app atual).</summary>
-    private static bool SameName(string exeName, string processName)
+    public static bool SameName(string exeName, string processName)
     {
         var name = exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? exeName[..^4] : exeName;
         return name.Equals(processName, StringComparison.OrdinalIgnoreCase)
