@@ -41,8 +41,31 @@ internal static class SourceWindow
         if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
         GetWindowThreadProcessId(hwnd, out uint pid);
         AllowSetForegroundWindow(pid);
-        if (!SetForegroundWindow(hwnd)) Log.Info("Abrir fonte: SetForegroundWindow recusado");
+        if (!SetForegroundWindow(hwnd) && !ForceForeground(hwnd))
+            Log.Info("Abrir fonte: o Windows recusou trazer a janela para a frente");
         return true;
+    }
+
+    /// <summary>
+    /// O Windows recusa SetForegroundWindow quando quem pede não é o dono do foco (janela aberta em
+    /// segundo plano, sem estar minimizada: o ícone só pisca). Ligar a fila de entrada da nossa thread
+    /// à da janela que está na frente faz o pedido valer.
+    /// </summary>
+    private static bool ForceForeground(IntPtr hwnd)
+    {
+        var front = GetForegroundWindow();
+        uint frontThread = front == IntPtr.Zero ? 0 : GetWindowThreadProcessId(front, out _);
+        uint ours = GetCurrentThreadId();
+        bool attached = frontThread != 0 && frontThread != ours && AttachThreadInput(ours, frontThread, true);
+        try
+        {
+            BringWindowToTop(hwnd);
+            return SetForegroundWindow(hwnd);
+        }
+        finally
+        {
+            if (attached) AttachThreadInput(ours, frontThread, false);
+        }
     }
 
     private static IntPtr Find(MediaSnapshot media)
@@ -85,4 +108,8 @@ internal static class SourceWindow
     [DllImport("user32.dll")] private static extern bool ShowWindow(IntPtr h, int cmd);
     [DllImport("user32.dll")] private static extern bool AllowSetForegroundWindow(uint pid);
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr h);
+    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] private static extern bool BringWindowToTop(IntPtr h);
+    [DllImport("user32.dll")] private static extern bool AttachThreadInput(uint from, uint to, bool attach);
+    [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
 }
