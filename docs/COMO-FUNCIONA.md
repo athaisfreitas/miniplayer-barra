@@ -10,8 +10,8 @@ Uma visão técnica curta, para quem quer ler ou mudar o código. O app é C# / 
 | `AppController.cs` | Liga as partes: a cada mudança nas sessões, escolhe a mídia e atualiza o player; os cliques viram comandos; as ondas só rodam enquanto a mídia mostrada toca. |
 | `Core/` | Regras sem dependência do Windows: `SessionPicker` (qual mídia aparece), `SourceClassifier` (de que fonte é cada sessão), `PauseAll`, `Settings`, `Log`. |
 | `Media/GsmtcMediaSessions.cs` | Acesso às sessões de mídia do Windows. |
-| `Audio/` | Captura do som e análise de frequências para as ondas. |
-| `Ui/` | Encaixe na barra (`TaskbarPlayer`, `TaskbarProbe`, `TaskbarSlot`), desenho (`PlayerLayout`, `PlayerRenderer`), cor das ondas (`CoverArt`), tema (`Theme`). |
+| `Audio/` | Captura do som e análise de frequências para as ondas; `AppVolume.cs` controla o volume do app da fonte. |
+| `Ui/` | Encaixe na barra (`TaskbarPlayer`, `TaskbarProbe`, `TaskbarSlot`), desenho (`PlayerLayout`, `PlayerRenderer`), cor das ondas (`CoverArt`), tema (`Theme`); `ChromeTabs.cs` acha e seleciona a aba que toca. |
 | `tests/MiniplayerBarra.Tests` | Testes automáticos (xUnit) das regras, do layout e do controlador, com fakes no lugar do Windows. |
 
 ## 1. De onde vem a música: GSMTC
@@ -81,10 +81,18 @@ A UI Automation é lenta, então só é chamada ao reposicionar, nunca a cada qu
 
 Se faltar espaço, o texto encolhe (com "…"), depois some. Os botões e a capa nunca somem (`Ui/PlayerLayout.cs`).
 
-## 4. Limitações conhecidas
+## 4. Abrir a aba e volume do app
+
+**Abrir a aba (`Ui/SourceWindow.cs` + `Ui/ChromeTabs.cs`).** Primeiro tenta o caminho rápido: uma janela cujo título contém o título da mídia. Isso só funciona quando a aba que toca é a ativa da janela. Se falhar, `ChromeTabs.TrySelect` lê pela UI Automation todas as abas (`TabItem` com `ClassName == "TabView"`) das janelas do processo `chrome`, escolhe a que casa com o título (preferindo a que tem "Audio playing" no nome), chama `SelectionItemPattern.Select()` e traz a janela dela para a frente. Leva algumas centenas de ms, por isso o `AppController` roda o "abrir fonte" fora da thread da interface.
+
+**Volume (`Audio/AppVolume.cs`).** A rodinha vira "cliques" inteiros (o touchpad acumula deltas até 120). O `AppController` lê o volume da sessão de áudio do app (`SimpleAudioVolume`, via NAudio), anda em degraus de 5% (`Core/VolumeStep.cs`) e grava de volta. O player mostra "Volume N%" no lugar do artista por 1,5 s.
+
+## 5. Limitações conhecidas
 
 - **O encaixe na barra não é oficial.** O Windows não tem uma API para colocar coisas dentro da barra de tarefas. Tornar uma janela filha da `Shell_TrayWnd` e ler os ícones pela UI Automation funciona hoje (Windows 11, build 26200), mas uma atualização do Windows pode mudar a estrutura da barra e quebrar o encaixe ou a leitura das posições. Nesse caso, o app tenta posições estimadas e escreve no log.
 - **Abas do Chrome:** o Chrome mostra ao Windows só **uma** aba por vez (a que começou a tocar por último). O player mostra essa aba; as outras abas tocando ficam invisíveis para ele até a aba mostrada sair. Depois do "Pausar tudo", as abas que levaram Stop somem do player até tocarem de novo, e o botão ▷ do player não consegue retomá-las.
+- **Volume do Chrome é um só:** o Chrome tem uma única sessão de áudio para todas as abas e para o YouTube Music instalado, então a rodinha muda o volume de todos juntos. Fontes "outros" (Spotify etc.) não têm controle de volume nem "abrir".
+- **Achar a aba depende do nome que o Chrome dá a ela** (título da página + sufixos como "Audio playing"). Se o título da mídia não aparecer no nome da aba e houver mais de uma aba tocando, nada é aberto.
 - **Só o monitor principal.** O player fica na barra do monitor principal.
 - **WhatsApp:** o WhatsApp Desktop publica um título genérico e nenhuma capa; o player mostra um ícone de nota musical.
 - **Ícone dos apps "outros":** os botões funcionam só se o app aceitar os comandos do Windows, e as ondas usam o som geral do PC.

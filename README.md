@@ -18,7 +18,8 @@ Foi feito para o **YouTube Music instalado como app do Chrome**, mas também fun
 | **⏯ Pausar / tocar** | Mostra ‖ enquanto toca e ▷ quando está pausado. |
 | **⏭ Avançar** | Passa para a próxima música. |
 | **Barrinhas coloridas** | Ficam atrás dos botões e se mexem com o som de verdade. A cor vem da capa da música. Com a música pausada, elas ficam paradas. |
-| **Capa, música e artista** | Clique para trazer o app que está tocando (por exemplo, o YouTube Music) para a frente. Passe o mouse para ver o nome completo, se ele estiver cortado com "…". |
+| **Capa, música e artista** | Clique para abrir o app ou **a aba exata** do Chrome que está tocando, mesmo que ela esteja em segundo plano no meio de várias abas. Passe o mouse para ver o nome completo, se ele estiver cortado com "…". |
+| **Rodinha do mouse** | Gire sobre o player para subir ou descer o volume, de 5 em 5%, **só do app que está tocando** (como no Mixer de Volume do Windows). O player mostra "Volume 40%" por um instante. O volume geral do Windows não muda. |
 | **Clique com o botão direito** | Abre um menu com **"Pausar tudo"** e **"Sair"**. |
 
 Clicar nos botões **não** tira o foco da janela em que você está. Se você estiver digitando um texto, pode pausar a música e continuar digitando.
@@ -134,6 +135,9 @@ Sim. O app não usa a internet, não abre nenhuma porta de rede e não envia nad
 
 **Funciona com o Spotify (ou outro app)?**
 Funciona com qualquer app que avisa o Windows do que está tocando, como o Spotify, o Edge e o Firefox. Eles aparecem como **"outros"**: entram por último na prioridade e as barrinhas usam o som geral do PC, em vez de só o som do app. Os botões funcionam se o app aceitar os comandos do Windows.
+
+**Por que o volume do YouTube Music muda junto com as abas do Chrome?**
+O Windows enxerga o Chrome como um app só, com um único controle de volume para todas as abas e para o YouTube Music instalado. Não dá para separar pelo Windows. A rodinha do player mexe nesse controle.
 
 **A barra de tarefas fica mais pesada?**
 Não. Com tudo pausado, o app fica parado (perto de 0% de CPU). As barrinhas e a captura do som só rodam enquanto a mídia mostrada está tocando.
